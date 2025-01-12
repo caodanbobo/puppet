@@ -3,6 +3,7 @@ import { Program } from "@coral-xyz/anchor";
 import { Puppet } from "../target/types/puppet";
 import { PuppetMaster } from "../target/types/puppet_master";
 import { expect } from "chai";
+import { PublicKey } from "@solana/web3.js";
 describe("puppet", () => {
   // Configure the client to use the local cluster.
   const provider = anchor.AnchorProvider.env();
@@ -12,11 +13,14 @@ describe("puppet", () => {
   const puppetMasterProgram = anchor.workspace
     .PuppetMaster as Program<PuppetMaster>;
   const puppetKeyPair = anchor.web3.Keypair.generate();
-  const authorityKeyPair = anchor.web3.Keypair.generate();
+  //const authorityKeyPair = anchor.web3.Keypair.generate();
 
   it("Dose CPI", async () => {
+    const [puppetMasterPDA, puppetMasterBump] =
+      PublicKey.findProgramAddressSync([], puppetMasterProgram.programId);
+
     await puppetProgram.methods
-      .initialize(authorityKeyPair.publicKey)
+      .initialize(puppetMasterPDA)
       .accounts({
         puppet: puppetKeyPair.publicKey,
         user: provider.wallet.publicKey,
@@ -25,12 +29,11 @@ describe("puppet", () => {
       .rpc();
 
     const res = await puppetMasterProgram.methods
-      .pullStrings(new anchor.BN(42))
+      .pullStrings(puppetMasterBump, new anchor.BN(42))
       .accounts({
         puppet: puppetKeyPair.publicKey,
-        authority: authorityKeyPair.publicKey,
+        authority: puppetMasterPDA,
       })
-      .signers([authorityKeyPair])
       .rpc();
 
     expect(

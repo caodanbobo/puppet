@@ -8,8 +8,9 @@ declare_id!("5onw2hp6bWiKheSufVHiChyTohoiU9jRb1JZGc9e9iQz");
 pub mod puppet_master {
     use super::*;
 
-    pub fn pull_strings(ctx: Context<PullStrings>, data: u64) -> Result<()> {
-        puppet::cpi::set_data(ctx.accounts.set_data_ctx(), data)?;
+    pub fn pull_strings(ctx: Context<PullStrings>, bump: u8, data: u64) -> Result<()> {
+        let bump = &[bump][..];
+        puppet::cpi::set_data(ctx.accounts.set_data_ctx().with_signer(&[&[bump]]), data)?;
         //without reloading, the 'puppet would remain'.
         //this is because the 'puppet' in the ctx is detached from
         //the underlying account after the type deseriablization
@@ -28,7 +29,8 @@ pub struct PullStrings<'info> {
     #[account(mut)]
     pub puppet: Account<'info, Data>,
     pub puppet_program: Program<'info, Puppet>,
-    pub authority: Signer<'info>,
+    /// CHECK: used as a PDA
+    pub authority: UncheckedAccount<'info>,
 }
 impl<'info> PullStrings<'info> {
     pub fn set_data_ctx(&self) -> CpiContext<'_, '_, '_, 'info, SetData<'info>> {

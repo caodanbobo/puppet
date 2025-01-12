@@ -1,4 +1,4 @@
-use anchor_lang::{ accounts::signer, prelude::* };
+use anchor_lang::prelude::*;
 
 declare_id!("21S1YpfYcTucW4twabCsUpCkCMzi3qvDkF4mESBugnfW");
 
